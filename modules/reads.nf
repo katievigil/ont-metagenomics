@@ -12,8 +12,9 @@ process BASECALL_DORADO {
     tuple val(sample), val(run), path("${sample}.${run}.basecalls.bam"), emit: bam
 
     script:
+    def model = params.basecall_mods == 'none' ? params.basecall_model : "${params.basecall_model},${params.basecall_mods}"
     """
-    dorado basecaller "${params.dorado_model}" "${pod5_dir}" \\
+    dorado basecaller "${model}" "${pod5_dir}" \\
         --device "${params.dorado_device}" \\
         --recursive \\
         > "${sample}.${run}.basecalls.bam"

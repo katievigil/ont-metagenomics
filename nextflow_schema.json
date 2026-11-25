@@ -8,17 +8,22 @@
     "input_output_options": {
       "title": "Input/output options",
       "type": "object",
-      "description": "Define where the input data are and where results are written.",
+      "description": "Where the reads are and where results are written.",
       "default": "",
-      "required": ["samplesheet"],
+      "required": [
+        "fastq"
+      ],
       "properties": {
-        "samplesheet": {
+        "fastq": {
           "type": "string",
-          "format": "file-path",
-          "exists": true,
-          "pattern": "^\\S+\\.csv$",
-          "description": "CSV with columns sample,run,reads. One row per sequencing run; rows sharing a sample ID are combined.",
-          "help_text": "reads may be a POD5 directory (basecalled by the pipeline), an unaligned BAM from Dorado, or a FASTQ(.gz) file."
+          "format": "path",
+          "description": "Reads to analyse: a FASTQ(.gz) or BAM file, a folder of these, or a folder of POD5 files.",
+          "help_text": "A folder of FASTQ or BAM files is combined into one sample. A folder containing POD5 files is basecalled with Dorado first, which needs a GPU."
+        },
+        "sample": {
+          "type": "string",
+          "description": "Sample name used for the output folder.",
+          "help_text": "Leave empty to use the file or folder name."
         },
         "outdir": {
           "type": "string",
@@ -51,14 +56,44 @@
     "basecalling_options": {
       "title": "Basecalling options",
       "type": "object",
-      "description": "Used only for runs given as POD5 directories. Requires a GPU and Dorado.",
+      "description": "Used only for POD5 folders. Requires a GPU and Dorado. Models follow the Oxford Nanopore Dorado model list.",
       "default": "",
       "properties": {
-        "dorado_model": {
+        "basecall_model": {
           "type": "string",
-          "default": "sup@v5.0.0,6mA,4mC_5mC",
-          "description": "Dorado model and modified-base models.",
-          "help_text": "Default matches the app note: SUP v5.0.0 with 6mA and 4mC_5mC."
+          "enum": [
+            "dna_r10.4.1_e8.2_400bps_hac@v6.0.0",
+            "dna_r10.4.1_e8.2_400bps_fast@v5.2.0",
+            "dna_r10.4.1_e8.2_400bps_hac@v5.2.0",
+            "dna_r10.4.1_e8.2_400bps_sup@v5.2.0",
+            "dna_r10.4.1_e8.2_400bps_fast@v5.0.0",
+            "dna_r10.4.1_e8.2_400bps_hac@v5.0.0",
+            "dna_r10.4.1_e8.2_400bps_sup@v5.0.0",
+            "dna_r10.4.1_e8.2_400bps_fast@v4.3.0",
+            "dna_r10.4.1_e8.2_400bps_hac@v4.3.0",
+            "dna_r10.4.1_e8.2_400bps_sup@v4.3.0",
+            "dna_r10.4.1_e8.2_400bps_fast@v4.2.0",
+            "dna_r10.4.1_e8.2_400bps_hac@v4.2.0",
+            "dna_r10.4.1_e8.2_400bps_sup@v4.2.0"
+          ],
+          "default": "dna_r10.4.1_e8.2_400bps_sup@v5.0.0",
+          "description": "DNA basecalling model.",
+          "help_text": "fast is quickest, hac is high accuracy, sup is super accuracy. The default matches the app note. The Dorado container must support the chosen model."
+        },
+        "basecall_mods": {
+          "type": "string",
+          "enum": [
+            "none",
+            "6mA",
+            "4mC_5mC",
+            "5mCG_5hmCG",
+            "5mC_5hmC",
+            "5mC",
+            "6mA,4mC_5mC"
+          ],
+          "default": "6mA,4mC_5mC",
+          "description": "Modified-base model(s) to call.",
+          "help_text": "Choose 'none' for unmodified calls. Not every model supports every modification: fast models have none, and the older v4.2.0 and v4.3.0 models use different sets. Dorado stops with an error if the combination is not supported."
         },
         "dorado_device": {
           "type": "string",
@@ -69,7 +104,7 @@
           "type": "string",
           "default": "nanoporetech/dorado:latest",
           "description": "Container image for Dorado.",
-          "help_text": "Pin a version tag for reproducible runs."
+          "help_text": "Pin a version tag for reproducible runs. The tag must include the models in the dropdown."
         }
       }
     },
@@ -159,7 +194,11 @@
       "type": "object",
       "description": "Databases used by CheckM2, GTDB-Tk, viralVerify and AMRFinderPlus.",
       "default": "",
-      "required": ["checkm2_db", "gtdbtk_db", "viralverify_hmm"],
+      "required": [
+        "checkm2_db",
+        "gtdbtk_db",
+        "viralverify_hmm"
+      ],
       "properties": {
         "checkm2_db": {
           "type": "string",
@@ -186,11 +225,23 @@
     }
   },
   "allOf": [
-    { "$ref": "#/definitions/input_output_options" },
-    { "$ref": "#/definitions/read_filtering_options" },
-    { "$ref": "#/definitions/basecalling_options" },
-    { "$ref": "#/definitions/assembly_and_binning_options" },
-    { "$ref": "#/definitions/mag_quality_options" },
-    { "$ref": "#/definitions/reference_database_options" }
+    {
+      "$ref": "#/definitions/input_output_options"
+    },
+    {
+      "$ref": "#/definitions/read_filtering_options"
+    },
+    {
+      "$ref": "#/definitions/basecalling_options"
+    },
+    {
+      "$ref": "#/definitions/assembly_and_binning_options"
+    },
+    {
+      "$ref": "#/definitions/mag_quality_options"
+    },
+    {
+      "$ref": "#/definitions/reference_database_options"
+    }
   ]
 }

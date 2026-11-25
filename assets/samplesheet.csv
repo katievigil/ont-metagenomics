@@ -1,0 +1,3 @@
+sample,run,reads
+zymo_fecal,flowcell1,/data/ont/zymo/flowcell1/pod5
+zymo_fecal,flowcell2,/data/ont/zymo/flowcell2/flowcell2.bam

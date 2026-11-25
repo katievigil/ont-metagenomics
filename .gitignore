@@ -1,0 +1,12 @@
+# Nextflow runtime
+.nextflow*
+work/
+results/
+
+# Python
+__pycache__/
+*.pyc
+
+# Editors and OS
+.DS_Store
+.vscode/

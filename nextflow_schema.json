@@ -1,0 +1,196 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://raw.githubusercontent.com/katievigil/ont-metagenomics/main/nextflow_schema.json",
+  "title": "ONT metagenomics pipeline parameters",
+  "description": "Nanopore metagenomics: metaMDBG assembly, MAG recovery and AMR localisation (after ONT application note AN_1282)",
+  "type": "object",
+  "definitions": {
+    "input_output_options": {
+      "title": "Input/output options",
+      "type": "object",
+      "description": "Define where the input data are and where results are written.",
+      "default": "",
+      "required": ["samplesheet"],
+      "properties": {
+        "samplesheet": {
+          "type": "string",
+          "format": "file-path",
+          "exists": true,
+          "pattern": "^\\S+\\.csv$",
+          "description": "CSV with columns sample,run,reads. One row per sequencing run; rows sharing a sample ID are combined.",
+          "help_text": "reads may be a POD5 directory (basecalled by the pipeline), an unaligned BAM from Dorado, or a FASTQ(.gz) file."
+        },
+        "outdir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Directory where results are written.",
+          "default": "results"
+        }
+      }
+    },
+    "read_filtering_options": {
+      "title": "Read filtering options",
+      "type": "object",
+      "description": "Quality and length filters applied to each run before assembly (Samtools, as in the app note).",
+      "default": "",
+      "properties": {
+        "min_qual": {
+          "type": "integer",
+          "default": 10,
+          "minimum": 0,
+          "description": "Minimum mean read quality (Phred)."
+        },
+        "min_len": {
+          "type": "integer",
+          "default": 1000,
+          "minimum": 0,
+          "description": "Minimum read length in bp."
+        }
+      }
+    },
+    "basecalling_options": {
+      "title": "Basecalling options",
+      "type": "object",
+      "description": "Used only for runs given as POD5 directories. Requires a GPU and Dorado.",
+      "default": "",
+      "properties": {
+        "dorado_model": {
+          "type": "string",
+          "default": "sup@v5.0.0,6mA,4mC_5mC",
+          "description": "Dorado model and modified-base models.",
+          "help_text": "Default matches the app note: SUP v5.0.0 with 6mA and 4mC_5mC."
+        },
+        "dorado_device": {
+          "type": "string",
+          "default": "cuda:all",
+          "description": "Device passed to dorado basecaller (--device)."
+        },
+        "dorado_container": {
+          "type": "string",
+          "default": "nanoporetech/dorado:latest",
+          "description": "Container image for Dorado.",
+          "help_text": "Pin a version tag for reproducible runs."
+        }
+      }
+    },
+    "assembly_and_binning_options": {
+      "title": "Assembly and binning options",
+      "type": "object",
+      "description": "Contig size thresholds and binner settings.",
+      "default": "",
+      "properties": {
+        "large_contig_size": {
+          "type": "integer",
+          "default": 1000000,
+          "minimum": 1,
+          "description": "Contigs at or above this length (bp) are assessed individually for single-contig HQ MAGs."
+        },
+        "semibin_env": {
+          "type": "string",
+          "default": "human_gut",
+          "description": "SemiBin2 pre-trained environment model."
+        },
+        "semibin_min_len": {
+          "type": "integer",
+          "default": 10000,
+          "minimum": 1,
+          "description": "Minimum contig length (bp) for SemiBin2."
+        },
+        "metabat_min_len": {
+          "type": "integer",
+          "default": 30000,
+          "minimum": 1,
+          "description": "Minimum contig length (bp) for MetaBAT2."
+        }
+      }
+    },
+    "mag_quality_options": {
+      "title": "MAG quality options",
+      "type": "object",
+      "description": "CheckM2 completeness and contamination thresholds (percent), as defined in the app note.",
+      "default": "",
+      "properties": {
+        "sc_hq_linear_completeness": {
+          "type": "number",
+          "default": 95,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Minimum completeness for a linear single-contig HQ MAG."
+        },
+        "sc_hq_circular_completeness": {
+          "type": "number",
+          "default": 90,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Minimum completeness for a circular single-contig HQ MAG (tiered 'closed')."
+        },
+        "hq_completeness": {
+          "type": "number",
+          "default": 90,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Minimum completeness for a binned HQ MAG."
+        },
+        "hq_contamination": {
+          "type": "number",
+          "default": 5,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Maximum contamination for a binned HQ MAG."
+        },
+        "mq_completeness": {
+          "type": "number",
+          "default": 50,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Minimum completeness for a binned MQ MAG."
+        },
+        "mq_contamination": {
+          "type": "number",
+          "default": 10,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Maximum contamination for a binned MQ MAG."
+        }
+      }
+    },
+    "reference_database_options": {
+      "title": "Reference database options",
+      "type": "object",
+      "description": "Databases used by CheckM2, GTDB-Tk, viralVerify and AMRFinderPlus.",
+      "default": "",
+      "required": ["checkm2_db", "gtdbtk_db", "viralverify_hmm"],
+      "properties": {
+        "checkm2_db": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "CheckM2 database directory."
+        },
+        "gtdbtk_db": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "GTDB-Tk reference data directory (GTDB R220)."
+        },
+        "viralverify_hmm": {
+          "type": "string",
+          "format": "file-path",
+          "exists": true,
+          "description": "viralVerify HMM file (nbc_hmms.hmm)."
+        },
+        "amrfinder_db": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "AMRFinderPlus database directory. Leave empty to use the installed default."
+        }
+      }
+    }
+  },
+  "allOf": [
+    { "$ref": "#/definitions/input_output_options" },
+    { "$ref": "#/definitions/read_filtering_options" },
+    { "$ref": "#/definitions/basecalling_options" },
+    { "$ref": "#/definitions/assembly_and_binning_options" },
+    { "$ref": "#/definitions/mag_quality_options" },
+    { "$ref": "#/definitions/reference_database_options" }
+  ]
+}

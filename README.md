@@ -101,3 +101,4 @@ Run on a small subsample first:
 3. Docker must be installed and running.
 
 EPI2ME reads `nextflow.config` and `nextflow_schema.json` to build the launch form, so keep both in sync when you add or rename parameters.
+# ont-metagenomics
